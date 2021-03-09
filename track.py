@@ -16,10 +16,15 @@ import cv2
 import torch
 import torch.backends.cudnn as cudnn
 import numpy as np
-
+import datetime
 
 palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
 
+def intersect(A,B,C,D):
+	return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
+
+def ccw(A,B,C):
+	return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
 
 def bbox_rel(*xyxy):
     """" Calculates the relative bounding box from absolute pixel values. """
@@ -42,7 +47,8 @@ def compute_color_for_labels(label):
     return tuple(color)
 
 
-def draw_boxes(img, bbox, identities=None, offset=(0, 0)):
+def draw_boxes(img, bbox, identities=None,labels=None, offset=(0, 0)):
+    
     for i, box in enumerate(bbox):
         x1, y1, x2, y2 = [int(i) for i in box]
         x1 += offset[0]
@@ -51,21 +57,22 @@ def draw_boxes(img, bbox, identities=None, offset=(0, 0)):
         y2 += offset[1]
         # box text and bar
         id = int(identities[i]) if identities is not None else 0
+        names = int(labels[i]) if labels is not None else 0
+        dic = {0:'person',2:'car'}
+        obj_names = dic[names]
+        # color = compute_color_for_labels(id)
+        if obj_names == 'person':
+            color = (0,0,255) # red
+        if obj_names == 'car':
+            color = (0,255,255) # yellow
+        label = '{}{:d}'.format(obj_names, id)
         
-        color = compute_color_for_labels(id)
-
-        # if names == 'person':
-        #     color = (0,0,255) # Red
-        # elif names == 'car':
-        #     color = (255,0,0,) # Blue
-        label = '{}{:d}'.format('', id)
         t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 2, 2)[0]
         cv2.rectangle(img, (x1, y1), (x2, y2), color, 3)
         cv2.rectangle(
             img, (x1, y1), (x1 + t_size[0] + 3, y1 + t_size[1] + 4), color, -1)
         cv2.putText(img, label, (x1, y1 +
                                  t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
-    cv2.putText(img,'id : {}'.format(id),(130,100),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),2)
     return img
 
 
@@ -90,6 +97,10 @@ def detect(opt, save_img=False):
         shutil.rmtree(out)  # delete output folder
     os.makedirs(out)  # make new output folder
     half = device.type != 'cpu'  # half precision only supported on CUDA
+    now = datetime.datetime.now() # current time
+    # now_time = now.strftime("%Y/%d/%m/%H:%M:%S")
+    one_minute_later = now + datetime.timedelta(minutes=1)
+    om_time = one_minute_later.strftime("%Y/%d/%m/%H:%M:%S")
 
     # Load model
     model = torch.load(weights, map_location=device)[
@@ -120,7 +131,12 @@ def detect(opt, save_img=False):
 
     save_path = str(Path(out))
     txt_path = str(Path(out)) + '/results.txt'
- 
+
+    memory = {}
+    people_counter = 0
+    car_counter = 0
+    time_sum = 0
+    
     for frame_idx, (path, img, im0s, vid_cap) in enumerate(dataset):
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
@@ -136,7 +152,8 @@ def detect(opt, save_img=False):
         pred = non_max_suppression(
             pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
         t2 = time_synchronized()
-
+        
+        
         # Process detections
         for i, det in enumerate(pred):  # detections per image
             if webcam:  # batch_size >= 1
@@ -147,10 +164,11 @@ def detect(opt, save_img=False):
             s += '%gx%g ' % img.shape[2:]  # print string
             save_path = str(Path(out) / Path(p).name)
             img_center_y = int(im0.shape[0]//2)
+            # line = [(0,img_center_y),(im0.shape[1],img_center_y)]
+            line = [(0,int(img_center_y*0.3)),(int(im0.shape[1]*0.7),int(img_center_y*0.3))]
+            cv2.line(im0,line[0],line[1],(0,0,255),5)
             
-            # cv2.line(im0,(0,img_center_y),(im0.shape[1],img_center_y),(0,0,255),cv2.LINE_AA)
-            person = 0
-            car = 0
+          
             
             if det is not None and len(det):
                 # Rescale boxes from img_size to im0 size
@@ -165,19 +183,18 @@ def detect(opt, save_img=False):
                 bbox_xywh = []
                 confs = []
                 bbox_xyxy = []
-                label_ls = []
+
 
                 # Adapt detections to deep sort input format
                 for *xyxy, conf, cls in det:
                     x_c, y_c, bbox_w, bbox_h = bbox_rel(*xyxy)
-                    label = names[int(cls)]
+                    
                     
                     obj = [x_c, y_c, bbox_w, bbox_h,int(cls)]
-                    center_x,center_y = int(np.mean([int(xyxy[0]),int(xyxy[2])])),int(np.mean([int(xyxy[1]),int(xyxy[3])]))
-                    rec = [center_x,center_y]
-                    cv2.circle(im0,(center_x,center_y),color=(0,255,255),radius=12,thickness = 10)
+                
+                    #cv2.circle(im0,(int(x_c),int(y_c)),color=(0,255,255),radius=12,thickness = 10)
                     bbox_xywh.append(obj)
-                    bbox_xyxy.append(rec)
+                    # bbox_xyxy.append(rec)
                     confs.append([conf.item()])
                     
 
@@ -186,15 +203,64 @@ def detect(opt, save_img=False):
                 confss = torch.Tensor(confs)
 
                 # Pass detections to deepsort
-                outputs = deepsort.update(xywhs, confss, im0)
-                
+                outputs = deepsort.update(xywhs, confss, im0) # deepsort
+                index_id = []
+                previous = memory.copy()
+                memory = {}
+                boxes = []
+                names_ls = []
+
+
+
                 # draw boxes for visualization
                 if len(outputs) > 0:
                     
                     bbox_xyxy = outputs[:, :4]
-                    identities = outputs[:, -1]
+                    identities = outputs[:, -2]
+                    labels = outputs[:,-1]
+                    dic = {0:'person',2:'car'}
+                    for i in labels:
+                        names_ls.append(dic[i])
                     
-                    draw_boxes(im0, bbox_xyxy, identities)
+                    # print('output len',len(outputs))
+                    for output in outputs:
+                        # print(output)
+                        boxes.append([output[0],output[1],output[2],output[3]])
+                        index_id.append('{}-{}'.format(names_ls[-1],output[-2]))
+
+                        memory[index_id[-1]] = boxes[-1]
+       
+                    if time_sum>=60:
+                        with open('counting.txt','a') as f:
+                            f.write('{} People : {}, Car : {}\n'.format(datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S'),people_counter,car_counter))
+                        people_counter,car_counter = 0,0
+                        time_sum = 0
+                    for box in boxes:
+                        # extract the bounding box coordinates
+                        (x, y) = (int(box[0]), int(box[1]))
+                        (w, h) = (int(box[2]), int(box[3]))
+
+
+                        if index_id[i] in previous:
+                            previous_box = previous[index_id[i]]
+                            (x2, y2) = (int(previous_box[0]), int(previous_box[1]))
+                            (w2, h2) = (int(previous_box[2]), int(previous_box[3]))
+                            p0 = (int(x + (w-x)/2), int(y + (h-y)/2))
+                            p1 = (int(x2 + (w2-x2)/2), int(y2 + (h2-y2)/2))
+                            
+                            # cv2.line(im0, p0, p1, (0,255,0), 3) # current frame obj center point - before frame obj center point
+                        
+                            
+                            if intersect(p0, p1, line[0], line[1]) and index_id[i].split('-')[0] == 'person':
+                                people_counter += 1
+                            if intersect(p0, p1, line[0], line[1]) and index_id[i].split('-')[0] == 'car':
+                                car_counter +=1
+
+   
+                        i += 1
+
+                    draw_boxes(im0,bbox_xyxy,identities,labels)
+                        
                     
 
                 # Write MOT compliant results to file
@@ -204,7 +270,6 @@ def detect(opt, save_img=False):
                         bbox_top = output[1]
                         bbox_w = output[2]
                         bbox_h = output[3]
-                        
                         identity = output[-1]
                         with open(txt_path, 'a') as f:
                             f.write(('%g ' * 10 + '\n') % (frame_idx, identity, bbox_left,
@@ -213,13 +278,17 @@ def detect(opt, save_img=False):
 
             else:
                 deepsort.increment_ages()
-
+            cv2.putText(im0, 'People : {}'.format(people_counter),(130,50),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
+            cv2.putText(im0, 'Car : {}'.format(car_counter), (130,100),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
             # Print time (inference + NMS)
             # cv2.line(im0,(0,img_center_y),(im0.shape[1],img_center_y),(0,0,255),cv2.LINE_AA)
-            # cv2.putText(im0,'id : {}'.format(identity),(130,100),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
-            cv2.putText(im0,'Car : {}'.format(car),(130,150),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
+            # cv2.putText(im0,'Person : {}'.format(final_person_id),(130,100),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
+            # cv2.putText(im0,'Car : {}'.format(final_car_id),(130,150),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
             
             print('%sDone. (%.3fs)' % (s, t2 - t1))
+            time_sum += t2-t1
+            
+
 
             # Stream results
             if view_img:
@@ -229,11 +298,11 @@ def detect(opt, save_img=False):
 
             # Save results (image with detections)
             if save_img:
-                print('saving img!')
                 if dataset.mode == 'images':
+                    # im0= cv2.resize(im0,(0,0),fx=0.5,fy=0.5,interpolation=cv2.INTER_LINEAR)
                     cv2.imwrite(save_path, im0)
                 else:
-                    print('saving video!')
+                    
                     if vid_path != save_path:  # new video
                         vid_path = save_path
                         if isinstance(vid_writer, cv2.VideoWriter):
@@ -289,6 +358,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.img_size = check_img_size(args.img_size)
     print(args)
-
+    now = datetime.datetime.now()
+    # now_time = now.strftime("%Y/%d/%m/%H:%M:%S")
+    one_minute_later = now + datetime.timedelta(minutes=1)
+    om_time = one_minute_later.strftime("%m/%d/%Y, %H:%M:%S")
     with torch.no_grad():
         detect(args)
