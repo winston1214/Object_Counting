@@ -18,7 +18,9 @@
 ```
 $ git clone https://github.com/winston1214/Car_Counting && cd Car_Counting
 ```
-
+```
+$ rm yolov5
+```
 ```
 $ git clone https://github.com/ultralytics/yolov5
 ```
