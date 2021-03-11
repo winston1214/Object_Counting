@@ -13,6 +13,21 @@
 
 **You can extract statistics on how many people or cars there were by time zone.(Now set to every 1 minute)**
 
+### Preparation in advance(After pip install -r requirements.txt)
+
+- Download yolov5 weight file : You can download the weight file <a href='https://github.com/ultralytics/yolov5'>here</a>.
+  ```
+  Sample Command
+  
+  $ cd yolov5
+  $ python3 detect.py --weights yolov5s.pt
+                                yolov5m.pt
+                                yolov5l.pt
+                                yolov5x.pt
+  ```
+- Download deepsort file : You can download the weight file <a href='https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6'>here</a>.
+                          And place ckpt.t7 file underdeep_sort/deep/checkpoint/
+
 ### How to do?
 
 ```
@@ -24,9 +39,8 @@ $ rm yolov5
 ```
 $ git clone https://github.com/ultralytics/yolov5
 ```
-
 ```
-& pip install -r requirements.txt
+$ pip install -r requirements.txt
 ```
 ⛔ If you occur error, If an error occurs, enter the requirements.txt file and comment on the packages that may have a version conflict.
 
