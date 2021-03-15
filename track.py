@@ -235,6 +235,7 @@ def detect(opt, save_img=False):
                             f.write('{} People : {}, Car : {}\n'.format(datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S'),people_counter,car_counter))
                         people_counter,car_counter = 0,0
                         time_sum = 0
+		    i = int(0)
                     for box in boxes:
                         # extract the bounding box coordinates
                         (x, y) = (int(box[0]), int(box[1]))
