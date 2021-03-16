@@ -97,10 +97,7 @@ def detect(opt, save_img=False):
         shutil.rmtree(out)  # delete output folder
     os.makedirs(out)  # make new output folder
     half = device.type != 'cpu'  # half precision only supported on CUDA
-    now = datetime.datetime.now() # current time
-    # now_time = now.strftime("%Y/%d/%m/%H:%M:%S")
-    one_minute_later = now + datetime.timedelta(minutes=1)
-    om_time = one_minute_later.strftime("%Y/%d/%m/%H:%M:%S")
+    now = datetime.datetime.now().strftime("%Y/%d/%m/%H:%M:%S") # current time
 
     # Load model
     model = torch.load(weights, map_location=device)[
@@ -224,7 +221,6 @@ def detect(opt, save_img=False):
                     
                     # print('output len',len(outputs))
                     for output in outputs:
-                        # print(output)
                         boxes.append([output[0],output[1],output[2],output[3]])
                         index_id.append('{}-{}'.format(names_ls[-1],output[-2]))
 
@@ -232,10 +228,11 @@ def detect(opt, save_img=False):
        
                     if time_sum>=60:
                         with open('counting.txt','a') as f:
-                            f.write('{} People : {}, Car : {}\n'.format(datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S'),people_counter,car_counter))
+                            f.write('{}~{} People : {}, Car : {}\n'.format(now,datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S'),people_counter,car_counter))
                         people_counter,car_counter = 0,0
                         time_sum = 0
-		    i = int(0)
+                        now = datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S')
+                    i = int(0)
                     for box in boxes:
                         # extract the bounding box coordinates
                         (x, y) = (int(box[0]), int(box[1]))
@@ -359,9 +356,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.img_size = check_img_size(args.img_size)
     print(args)
-    now = datetime.datetime.now()
-    # now_time = now.strftime("%Y/%d/%m/%H:%M:%S")
-    one_minute_later = now + datetime.timedelta(minutes=1)
-    om_time = one_minute_later.strftime("%m/%d/%Y, %H:%M:%S")
     with torch.no_grad():
         detect(args)
