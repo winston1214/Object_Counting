@@ -42,9 +42,22 @@ $ git clone https://github.com/ultralytics/yolov5
 ```
 $ pip install -r requirements.txt
 ```
-⛔ If you occur error, If an error occurs, enter the requirements.txt file and comment on the packages that may have a version conflict.
+⛔ If you occur error enter the requirements.txt file and comment on the packages that may have a version conflict.
 
 ⛔ If the equipment is Nvidia mini PC(ex. Jetson Nano, Xavier), the pytorch is not installed as a pip.
+
+⛔ In jetson nano mini pc, you can enter some commands
+```
+$ sudo gedit ~/.bashrc
+```
+```
+# add last line
+export OPENBLAS_CORETYPE=ARMV8
+```
+```
+$ source ~/.bashrc
+```
+
 
 **Excute Command**
 
