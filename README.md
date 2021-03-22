@@ -40,7 +40,7 @@ $ rm yolov5
 $ git clone https://github.com/ultralytics/yolov5
 ```
 ```
-$ pip install -r requirements.txt
+$ pip3 install -r requirements.txt
 ```
 ⛔ If you occur error enter the requirements.txt file and comment on the packages that may have a version conflict.
 
