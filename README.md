@@ -26,7 +26,7 @@
                                 yolov5x.pt
   ```
 - Download deepsort file : You can download the weight file <a href='https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6'>here</a>.
-                          And place ckpt.t7 file under deep_sort/deep/checkpoint/
+                          And place ckpt.t7 file under pytorch_deep_sort/deep_sort/deep/checkpoint/
 
 ### How to do?
 
