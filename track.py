@@ -18,6 +18,9 @@ import torch.backends.cudnn as cudnn
 import numpy as np
 import datetime
 
+import json
+import requests
+
 palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
 
 def intersect(A,B,C,D):
@@ -133,6 +136,7 @@ def detect(opt, save_img=False):
     people_counter = 0
     car_counter = 0
     time_sum = 0
+    now_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
     
     for frame_idx, (path, img, im0s, vid_cap) in enumerate(dataset):
         img = torch.from_numpy(img).to(device)
@@ -160,9 +164,9 @@ def detect(opt, save_img=False):
 
             s += '%gx%g ' % img.shape[2:]  # print string
             save_path = str(Path(out) / Path(p).name)
-            img_center_y = int(im0.shape[0]//2)
+            img_center_x = int(im0.shape[1]//2)
             # line = [(0,img_center_y),(im0.shape[1],img_center_y)]
-            line = [(0,int(img_center_y*0.3)),(int(im0.shape[1]*0.7),int(img_center_y*0.3))]
+            line = [(int(img_center_x + 100),0),(img_center_x+100,int(im0.shape[0]*0.6))]
             cv2.line(im0,line[0],line[1],(0,0,255),5)
             
           
@@ -225,13 +229,19 @@ def detect(opt, save_img=False):
                         index_id.append('{}-{}'.format(names_ls[-1],output[-2]))
 
                         memory[index_id[-1]] = boxes[-1]
-       
+
                     if time_sum>=60:
-                        with open('counting.txt','a') as f:
-                            f.write('{}~{} People : {}, Car : {}\n'.format(now,datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S'),people_counter,car_counter))
+                        # with open('counting.json','a') as f:
+                        #     f.write('{}~{} People : {}, Car : {}\n'.format(now,datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S'),people_counter,car_counter))
+                        #     data = f.read()
+                        #     json = json.loads(data)
+                        #     requests.get(url="https://localhost:8000", params=json)
+                        with open('inference/output/counting.txt','a') as f:
+                            f.write('{}~{} People : {}, Car : {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S'),people_counter,car_counter))
+
                         people_counter,car_counter = 0,0
                         time_sum = 0
-                        now = datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S')
+                        now_time = datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S')
                     i = int(0)
                     for box in boxes:
                         # extract the bounding box coordinates
@@ -279,9 +289,13 @@ def detect(opt, save_img=False):
             cv2.putText(im0, 'People : {}'.format(people_counter),(130,50),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
             cv2.putText(im0, 'Car : {}'.format(car_counter), (130,100),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
             # Print time (inference + NMS)
-            # cv2.line(im0,(0,img_center_y),(im0.shape[1],img_center_y),(0,0,255),cv2.LINE_AA)
-            # cv2.putText(im0,'Person : {}'.format(final_person_id),(130,100),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
-            # cv2.putText(im0,'Car : {}'.format(final_car_id),(130,150),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
+            if time_sum>=60:
+                with open('inference/output/counting.txt','a') as f:
+                    f.write('{}~{} People : {}, Car : {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S'),people_counter,car_counter))
+
+                people_counter,car_counter = 0,0
+                time_sum = 0
+                now_time = datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S')
             
             print('%sDone. (%.3fs)' % (s, t2 - t1))
             time_sum += t2-t1
@@ -317,7 +331,9 @@ def detect(opt, save_img=False):
         print('Results saved to %s' % os.getcwd() + os.sep + out)
         if platform == 'darwin':  # MacOS
             os.system('open ' + save_path)
-
+    
+    with open('inference/output/counting.txt','a') as f:
+        f.write('{}~{} People : {}, Car : {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S'),people_counter,car_counter))
     print('Done. (%.3fs)' % (time.time() - t0))
 
 
