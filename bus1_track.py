@@ -100,7 +100,7 @@ def detect(opt, save_img=False):
         shutil.rmtree(out)  # delete output folder
     os.makedirs(out)  # make new output folder
     half = device.type != 'cpu'  # half precision only supported on CUDA
-    now = datetime.datetime.now().strftime("%Y/%d/%m/%H:%M:%S") # current time
+    now = datetime.datetime.now().strftime("%Y/%m/%d/%H:%M:%S") # current time
 
     # Load model
     model = torch.load(weights, map_location=device)[
@@ -238,11 +238,6 @@ def detect(opt, save_img=False):
                             memory[index_id[-1]] = boxes[-1]
 
                         if time_sum>=60:
-                            # with open('counting.json','a') as f:
-                            #     f.write('{}~{} People : {}, Car : {}\n'.format(now,datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S'),people_counter,car_counter))
-                            #     data = f.read()
-                            #     json = json.loads(data)
-                            #     requests.get(url="https://localhost:8000", params=json)
                             with open('inference/output/counting.txt','a') as f:
                                 f.write('{}~{} People : {}, Car : {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),people_counter,car_counter))
 
@@ -297,11 +292,11 @@ def detect(opt, save_img=False):
             # Print time (inference + NMS)
             if time_sum>=60:
                 with open('inference/output/counting.txt','a') as f:
-                    f.write('{}~{} People : {}, Car : {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S'),people_counter,car_counter))
+                    f.write('{}~{} People : {}, Car : {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),people_counter,car_counter))
 
                 people_counter,car_counter = 0,0
                 time_sum = 0
-                now_time = datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S')
+                now_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
             
             print('%sDone. (%.3fs)' % (s, t2 - t1))
             time_sum += t2-t1
@@ -339,7 +334,7 @@ def detect(opt, save_img=False):
             os.system('open ' + save_path)
     
     with open('inference/output/counting.txt','a') as f:
-        f.write('{}~{} People : {}, Car : {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%d/%m %H:%M:%S'),people_counter,car_counter))
+        f.write('{}~{} People : {}, Car : {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),people_counter,car_counter))
     print('Done. (%.3fs)' % (time.time() - t0))
 
 
