@@ -79,7 +79,7 @@ $ python3 track.py --source VIDEO_PATH --weights yolov5/yolov5x.pt --classes 2
 2. **If you want to reposition the line, fix <a href='https://github.com/winston1214/Car_Counting/blob/223f7a076a7f1b932fff582f5f809b15ed95ca75/track.py#L168'>this part</a>**
 3. **If you want to reposition the text, fix <a href='https://github.com/winston1214/Car_Counting/blob/223f7a076a7f1b932fff582f5f809b15ed95ca75/track.py#L281'>this part</a>**
 
-4. **Bus Revise **
+4. **Bus Revise**
   - **Adjust Undetectable area**  <a href='https://github.com/winston1214/Car_Counting/blob/5785f303d622b2bceb5a3a962d5aac1bde5e5605/bus1_track.py#L181'>this part</a>
   - **Visualize Line** <a href='https://github.com/winston1214/Car_Counting/blob/5785f303d622b2bceb5a3a962d5aac1bde5e5605/bus1_track.py#L170'>this part</a>              
            
