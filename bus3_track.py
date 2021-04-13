@@ -135,6 +135,8 @@ def detect(opt, save_img=False):
     memory = {}
     people_counter = 0
     car_counter = 0
+    in_people = 0
+    out_people = 0
     time_sum = 0
     now_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
     
@@ -258,14 +260,19 @@ def detect(opt, save_img=False):
                                 p0 = (int(x + (w-x)/2), int(y + (h-y)/2))
                                 p1 = (int(x2 + (w2-x2)/2), int(y2 + (h2-y2)/2))
                                 
-                                # cv2.line(im0, p0, p1, (0,255,0), 3) # current frame obj center point - before frame obj center point
+                                cv2.line(im0, p0, p1, (0,255,0), 3) # current frame obj center point - before frame obj center point
                             
                                 
                                 if intersect(p0, p1, line[0], line[1]) and index_id[i].split('-')[0] == 'person':
                                     people_counter += 1
+                                    if p0[0] > line[1][0]:
+                                        in_people +=1
+                                    else:
+                                        out_people +=1
                                 if intersect(p0, p1, line[0], line[1]) and index_id[i].split('-')[0] == 'car':
                                     car_counter +=1
-
+                                
+                                
     
                             i += 1
 
@@ -287,7 +294,7 @@ def detect(opt, save_img=False):
 
             else:
                 deepsort.increment_ages()
-            cv2.putText(im0, 'People : {}'.format(people_counter),(130,50),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
+            cv2.putText(im0, 'In : {}, Out : {}'.format(in_people,out_people),(130,50),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
             cv2.putText(im0, 'Car : {}'.format(car_counter), (130,100),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
             # Print time (inference + NMS)
             if time_sum>=60:
