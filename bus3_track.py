@@ -131,8 +131,9 @@ def detect(opt, save_img=False):
 
     save_path = str(Path(out))
     txt_path = str(Path(out)) + '/results.txt'
-    url = 'https://api.blackstonebelleforet.com/count/pepolecount'
-    uid = 'bus3'
+    url = 'https://api.blackstonebelleforet.com/count/peoplecount'
+    uid = 'bus1'
+    os.system('shutdown -r 06:00')
     memory = {}
     people_counter = 0
     car_counter = 0
@@ -169,8 +170,8 @@ def detect(opt, save_img=False):
             save_path = str(Path(out) / Path(p).name)
             img_center_x = int(im0.shape[1]//2)
             # line = [(0,img_center_y),(im0.shape[1],img_center_y)]
-            line = [(int(img_center_x + 150),0),(img_center_x+150,int(im0.shape[0]))]
-            line2 = [(int(img_center_x + 200),0),(img_center_x+200,int(im0.shape[0]))]
+            line = [(int(img_center_x + 150),0),(img_center_x+50,int(im0.shape[0]))]
+            line2 = [(int(img_center_x + 200),0),(img_center_x+170,int(im0.shape[0]))]
             cv2.line(im0,line[0],line[1],(0,0,255),5)
             cv2.line(im0,line2[0],line2[1],(0,255,0),5)
           
@@ -242,12 +243,12 @@ def detect(opt, save_img=False):
 
                         if time_sum>=60:
                             param={'In_people':in_people,'Out_people':out_people,'uid':uid,'time':now_time+'~'+datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
-                            respose = requests.post(url,data=param)
-                            respose_text = requests.text
+                            response = requests.post(url,data=param)
+                            response_text = response.text
                             with open('counting.txt','a') as f:
-                                f.write('{}~{} IN : {}, Out : {} Response: {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),in_counter,out_counter,response_text))
+                                f.write('{}~{} IN : {}, Out : {} Response: {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),in_people,out_people,response_text))
 
-                            people_counter,car_counter = 0,0,0,0
+                            people_counter,car_counter,in_people,out_people = 0,0,0,0
                             time_sum = 0
                             now_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
                         i = int(0)
@@ -303,12 +304,12 @@ def detect(opt, save_img=False):
             # Print time (inference + NMS)
             if time_sum>=60:
                 param={'In_people':in_people,'Out_people':out_people,'uid':uid,'time':now_time+'~'+datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
-                respose = requests.post(url,data=param)
-                respose_text = requests.text
+                response = requests.post(url,data=param)
+                response_text = response.text
                 with open('counting.txt','a') as f:
-                    f.write('{}~{} IN : {}, Out : {}, Response: {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),in_counter,out_counter,response_text))
+                    f.write('{}~{} IN : {}, Out : {}, Response: {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),in_people,out_people,response_text))
 
-                people_counter,car_counter,in_counter,out_counter = 0,0,0,0
+                people_counter,car_counter,in_people,out_people = 0,0,0,0
                 time_sum = 0
                 now_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
             
@@ -347,10 +348,10 @@ def detect(opt, save_img=False):
         if platform == 'darwin':  # MacOS
             os.system('open ' + save_path)
     param={'In_people':in_people,'Out_people':out_people,'uid':uid,'time':now_time+'~'+datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
-    respose = requests.post(url,data=param)
-    respose_text = requests.text
+    response = requests.post(url,data=param)
+    response_text = response.text
     with open('counting.txt','a') as f:
-        f.write('{}~{} IN : {}, Out : {}, Response: {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),in_counter,out_counter,response_text))
+        f.write('{}~{} IN : {}, Out : {}, Response: {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),in_people,out_people,response_text))
     print('Done. (%.3fs)' % (time.time() - t0))
 
 
