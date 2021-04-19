@@ -132,7 +132,7 @@ def detect(opt, save_img=False):
     save_path = str(Path(out))
     txt_path = str(Path(out)) + '/results.txt'
     url = 'https://api.blackstonebelleforet.com/count/peoplecount'
-    uid = 'bus1'
+    uid = 'bus3'
     os.system('shutdown -r 06:00')
     memory = {}
     people_counter = 0
