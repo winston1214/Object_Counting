@@ -131,7 +131,8 @@ def detect(opt, save_img=False):
 
     save_path = str(Path(out))
     txt_path = str(Path(out)) + '/results.txt'
-
+    url = 'https://api.blackstonebelleforet.com/count/pepolecount'
+    uid = 'bus3'
     memory = {}
     people_counter = 0
     car_counter = 0
@@ -240,10 +241,13 @@ def detect(opt, save_img=False):
                             memory[index_id[-1]] = boxes[-1]
 
                         if time_sum>=60:
-                            with open('inference/output/counting.txt','a') as f:
-                                f.write('{}~{} People : {}, Car : {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),people_counter,car_counter))
+                            param={'In_people':in_people,'Out_people':out_people,'uid':uid,'time':now_time+'~'+datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
+                            respose = requests.post(url,data=param)
+                            respose_text = requests.text
+                            with open('counting.txt','a') as f:
+                                f.write('{}~{} IN : {}, Out : {} Response: {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),in_counter,out_counter,response_text))
 
-                            people_counter,car_counter = 0,0
+                            people_counter,car_counter = 0,0,0,0
                             time_sum = 0
                             now_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
                         i = int(0)
@@ -295,13 +299,16 @@ def detect(opt, save_img=False):
             else:
                 deepsort.increment_ages()
             cv2.putText(im0, 'In : {}, Out : {}'.format(in_people,out_people),(130,50),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
-            cv2.putText(im0, 'Car : {}'.format(car_counter), (130,100),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
+            cv2.putText(im0, 'Person : {}'.format(people_counter), (130,100),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
             # Print time (inference + NMS)
             if time_sum>=60:
-                with open('inference/output/counting.txt','a') as f:
-                    f.write('{}~{} People : {}, Car : {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),people_counter,car_counter))
+                param={'In_people':in_people,'Out_people':out_people,'uid':uid,'time':now_time+'~'+datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
+                respose = requests.post(url,data=param)
+                respose_text = requests.text
+                with open('counting.txt','a') as f:
+                    f.write('{}~{} IN : {}, Out : {}, Response: {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),in_counter,out_counter,response_text))
 
-                people_counter,car_counter = 0,0
+                people_counter,car_counter,in_counter,out_counter = 0,0,0,0
                 time_sum = 0
                 now_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
             
@@ -319,7 +326,7 @@ def detect(opt, save_img=False):
             # Save results (image with detections)
             if save_img:
                 if dataset.mode == 'images':
-                    # im0= cv2.resize(im0,(0,0),fx=0.5,fy=0.5,interpolation=cv2.INTER_LINEAR)
+                    im0= cv2.resize(im0,(0,0),fx=0.5,fy=0.5,interpolation=cv2.INTER_LINEAR)
                     cv2.imwrite(save_path, im0)
                 else:
                     
@@ -339,9 +346,11 @@ def detect(opt, save_img=False):
         print('Results saved to %s' % os.getcwd() + os.sep + out)
         if platform == 'darwin':  # MacOS
             os.system('open ' + save_path)
-    
-    with open('inference/output/counting.txt','a') as f:
-        f.write('{}~{} People : {}, Car : {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),people_counter,car_counter))
+    param={'In_people':in_people,'Out_people':out_people,'uid':uid,'time':now_time+'~'+datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
+    respose = requests.post(url,data=param)
+    respose_text = requests.text
+    with open('counting.txt','a') as f:
+        f.write('{}~{} IN : {}, Out : {}, Response: {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),in_counter,out_counter,response_text))
     print('Done. (%.3fs)' % (time.time() - t0))
 
 
