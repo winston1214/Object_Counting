@@ -131,11 +131,14 @@ def detect(opt, save_img=False):
 
     save_path = str(Path(out))
     txt_path = str(Path(out)) + '/results.txt'
-    url = 'https://api.url'
-    uid = 'Bus1'
+    url = 'https://api.blackstonebelleforet.com/count/peoplecount'
+    uid = 'bus1'
+    os.system('shutdown -r 06:00')
     memory = {}
     people_counter = 0
     car_counter = 0
+    in_people = 0
+    out_people = 0
     time_sum = 0
     now_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
     
@@ -239,15 +242,13 @@ def detect(opt, save_img=False):
                             memory[index_id[-1]] = boxes[-1]
 
                         if time_sum>=60:
-			    param={"people":people_counter , "car":car_counter,"uid":uid, "time": now_time+'~'+datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
-			    response=requests.post(url,data = param)
-			    response_text=response.text
-			    with open('counting.txt','a') as f:
-			            f.write('{}~{} People : {}, Car : {}, Response: {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),people_counter,car_counter,response_text))
-                            #with open('inference/output/counting.txt','a') as f:
-                            #   f.write('{}~{} People : {}, Car : {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),people_counter,car_counter))
+                            param={'In_people':in_people,'Out_people':out_people,'uid':uid,'time':now_time+'~'+datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
+                            response = requests.post(url,data=param)
+                            response_text = response.text
+                            with open('counting.txt','a') as f:
+                                f.write('{}~{} IN : {}, Out : {} Response: {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),in_people,out_people,response_text))
 
-                            people_counter,car_counter = 0,0
+                            people_counter,car_counter,in_people,out_people = 0,0,0,0
                             time_sum = 0
                             now_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
                         i = int(0)
@@ -264,14 +265,19 @@ def detect(opt, save_img=False):
                                 p0 = (int(x + (w-x)/2), int(y + (h-y)/2))
                                 p1 = (int(x2 + (w2-x2)/2), int(y2 + (h2-y2)/2))
                                 
-                                # cv2.line(im0, p0, p1, (0,255,0), 3) # current frame obj center point - before frame obj center point
+                                cv2.line(im0, p0, p1, (0,255,0), 3) # current frame obj center point - before frame obj center point
                             
                                 
                                 if intersect(p0, p1, line[0], line[1]) and index_id[i].split('-')[0] == 'person':
                                     people_counter += 1
+                                    if p0[0] > line[1][0]:
+                                        in_people +=1
+                                    else:
+                                        out_people +=1
                                 if intersect(p0, p1, line[0], line[1]) and index_id[i].split('-')[0] == 'car':
                                     car_counter +=1
-
+                                
+                                
     
                             i += 1
 
@@ -293,19 +299,17 @@ def detect(opt, save_img=False):
 
             else:
                 deepsort.increment_ages()
-            cv2.putText(im0, 'People : {}'.format(people_counter),(130,50),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
-            cv2.putText(im0, 'Car : {}'.format(car_counter), (130,100),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
+            cv2.putText(im0, 'In : {}, Out : {}'.format(in_people,out_people),(130,50),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
+            cv2.putText(im0, 'Person : {}'.format(people_counter), (130,100),cv2.FONT_HERSHEY_COMPLEX,1.0,(0,0,255),3)
             # Print time (inference + NMS)
             if time_sum>=60:
-		param={"people":people_counter , "car":car_counter,"uid":uid, "time": now_time+'~'+datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
-		response=requests.post(url,data = param)
-		response_text=response.text
-		with open('counting.txt','a') as f:
-		    f.write('{}~{} People : {}, Car : {}, Response: {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),people_counter,car_counter,response_text))
-                #with open('inference/output/counting.txt','a') as f:
-                    #f.write('{}~{} People : {}, Car : {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),people_counter,car_counter))
+                param={'In_people':in_people,'Out_people':out_people,'uid':uid,'time':now_time+'~'+datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
+                response = requests.post(url,data=param)
+                response_text = response.text
+                with open('counting.txt','a') as f:
+                    f.write('{}~{} IN : {}, Out : {}, Response: {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),in_people,out_people,response_text))
 
-                people_counter,car_counter = 0,0
+                people_counter,car_counter,in_people,out_people = 0,0,0,0
                 time_sum = 0
                 now_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
             
@@ -323,7 +327,7 @@ def detect(opt, save_img=False):
             # Save results (image with detections)
             if save_img:
                 if dataset.mode == 'images':
-                    # im0= cv2.resize(im0,(0,0),fx=0.5,fy=0.5,interpolation=cv2.INTER_LINEAR)
+                    im0= cv2.resize(im0,(0,0),fx=0.5,fy=0.5,interpolation=cv2.INTER_LINEAR)
                     cv2.imwrite(save_path, im0)
                 else:
                     
@@ -343,11 +347,11 @@ def detect(opt, save_img=False):
         print('Results saved to %s' % os.getcwd() + os.sep + out)
         if platform == 'darwin':  # MacOS
             os.system('open ' + save_path)
-    param={"people":people_counter , "car":car_counter,"uid":uid,"time": now_time+'~'+datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
-    response=requests.post(url,data = param)
-    response_text=response.text
-    with open('inference/output/counting.txt','a') as f:
-        f.write('{}~{} People : {}, Car : {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),people_counter,car_counter))
+    param={'In_people':in_people,'Out_people':out_people,'uid':uid,'time':now_time+'~'+datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
+    response = requests.post(url,data=param)
+    response_text = response.text
+    with open('counting.txt','a') as f:
+        f.write('{}~{} IN : {}, Out : {}, Response: {}\n'.format(now_time,datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),in_people,out_people,response_text))
     print('Done. (%.3fs)' % (time.time() - t0))
 
 
