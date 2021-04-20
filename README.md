@@ -28,6 +28,8 @@
 - Download deepsort file : You can download the weight file <a href='https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6'>here</a>.
                           And place ckpt.t7 file under pytorch_deep_sort/deep_sort/deep/checkpoint/
 
+
+- If you use **Jetson nano**, you should change **dataset.py to yolov5/utils/dataset.py**
 ### How to do?
 
 ```
